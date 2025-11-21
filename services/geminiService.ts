@@ -1,5 +1,4 @@
 import { GoogleGenAI, GenerateContentResponse } from "@google/genai";
-import { ImageSize, AspectRatio } from "../types";
 
 // Helper to validate Env Key
 const getEnvApiKey = (): string => {
@@ -60,53 +59,6 @@ export const generateMockup = async (
   } catch (error: any) {
     console.error("Mockup generation failed:", error);
     throw new Error(error.message || "Failed to generate mockup");
-  }
-};
-
-/**
- * Generates high-fidelity images using Gemini 3 Pro Image Preview.
- * Requires user to select a paid API key via the window.aistudio interface.
- */
-export const generateProImage = async (
-  prompt: string,
-  size: ImageSize,
-  ratio: AspectRatio
-): Promise<string> => {
-  // 1. Ensure we have a paid key selected
-  await ensurePaidApiKey();
-
-  // 2. Initialize AI with the potentially newly selected key (available via process.env.API_KEY automatically after selection)
-  const apiKey = getEnvApiKey();
-  const ai = new GoogleGenAI({ apiKey });
-
-  try {
-    const response = await ai.models.generateContent({
-      model: 'gemini-3-pro-image-preview',
-      contents: {
-        parts: [
-          {
-            text: prompt,
-          },
-        ],
-      },
-      config: {
-        imageConfig: {
-          imageSize: size,
-          aspectRatio: ratio,
-        },
-      },
-    });
-
-    return extractImageFromResponse(response);
-  } catch (error: any) {
-    console.error("Pro generation failed:", error);
-    // Handle the specific "Requested entity was not found" error for key resets
-    const win = window as any;
-    if (error.message && error.message.includes("Requested entity was not found") && win.aistudio?.openSelectKey) {
-       // This indicates a potential key issue, prompting re-selection might be good UX handled in the UI component
-       throw new Error("API Key invalid or expired. Please re-select your key.");
-    }
-    throw new Error(error.message || "Failed to generate pro image");
   }
 };
 

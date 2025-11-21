@@ -22,14 +22,14 @@ export const ProductSelector: React.FC<ProductSelectorProps> = ({ selectedProduc
         <button
           key={p.id}
           onClick={() => onSelect(p.id)}
-          className={`flex flex-col items-center p-3 rounded-lg border transition-all ${
+          className={`flex flex-col items-center justify-center p-3 rounded-2xl border transition-all duration-300 aspect-square ${
             selectedProduct === p.id
-              ? 'bg-blue-600/20 border-blue-500 text-white shadow-md shadow-blue-900/20'
-              : 'bg-gray-800 border-gray-700 text-gray-400 hover:bg-gray-750 hover:border-gray-600'
+              ? 'bg-[#3398DB] border-[#3398DB] text-white shadow-lg' // Active State
+              : 'bg-black/20 border-transparent text-[#EDF1F2]/60 hover:bg-black/30 hover:text-[#EDF1F2]' // Inactive State
           }`}
         >
-          <span className="text-2xl mb-1">{p.icon}</span>
-          <span className="text-xs font-medium">{p.label}</span>
+          <span className="text-2xl mb-2">{p.icon}</span>
+          <span className="text-xs font-semibold">{p.label}</span>
         </button>
       ))}
     </div>

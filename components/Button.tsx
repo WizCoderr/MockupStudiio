@@ -17,19 +17,25 @@ export const Button: React.FC<ButtonProps> = ({
   disabled,
   ...props
 }) => {
-  const baseStyles = "inline-flex items-center justify-center font-medium rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-900 disabled:opacity-50 disabled:cursor-not-allowed";
+  // Material 3 Expressive: Rounded-full (Pill shape)
+  const baseStyles = "inline-flex items-center justify-center font-medium rounded-full transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed active:scale-[0.98]";
   
   const sizeStyles = {
-    sm: "px-3 py-1.5 text-xs",
-    md: "px-4 py-3 text-sm",
-    lg: "px-6 py-4 text-base"
+    sm: "px-4 py-2 text-xs",
+    md: "px-6 py-3 text-sm",
+    lg: "px-8 py-4 text-base"
   };
 
+  // Palette Mapping:
+  // Primary: #3398DB (Blue)
+  // Danger: #E74D3C (Red)
+  // Text: #EDF1F2 (Light Gray)
+  
   const variants = {
-    primary: "bg-blue-600 hover:bg-blue-500 text-white focus:ring-blue-500 shadow-lg shadow-blue-500/20",
-    secondary: "bg-gray-700 hover:bg-gray-600 text-white focus:ring-gray-500 border border-gray-600",
-    danger: "bg-red-600 hover:bg-red-500 text-white focus:ring-red-500",
-    ghost: "bg-transparent hover:bg-gray-800 text-gray-400 hover:text-white"
+    primary: "bg-[#3398DB] hover:bg-[#2980b9] text-white shadow-md shadow-black/20 hover:shadow-lg hover:shadow-black/30",
+    secondary: "bg-white/10 hover:bg-white/20 text-[#EDF1F2] border border-white/5",
+    danger: "bg-[#E74D3C]/10 hover:bg-[#E74D3C]/20 text-[#E74D3C] border border-[#E74D3C]/20",
+    ghost: "bg-transparent hover:bg-white/5 text-[#3398DB] hover:text-[#2980b9]"
   };
 
   return (

@@ -1,24 +1,18 @@
 import React, { useState, useCallback } from 'react';
-import { AppMode, ProductType, ImageSize, AspectRatio } from '../types';
-import { generateMockup, generateProImage, generatePromoVideo, ensurePaidApiKey } from '../services/geminiService';
+import { ProductType } from '../types';
+import { generateMockup, generatePromoVideo } from '../services/geminiService';
 import { LogoUploader } from './LogoUploader';
 import { ProductSelector } from './ProductSelector';
 import { Button } from './Button';
 
 const App: React.FC = () => {
   // --- State ---
-  const [mode, setMode] = useState<AppMode>(AppMode.LOGO_MOCKUP);
   
   // Mockup State
   const [logo, setLogo] = useState<string | null>(null);
   const [selectedProduct, setSelectedProduct] = useState<ProductType>(ProductType.MUG);
   const [mockupPrompt, setMockupPrompt] = useState("");
   
-  // Pro Generator State
-  const [proPrompt, setProPrompt] = useState("");
-  const [proSize, setProSize] = useState<ImageSize>(ImageSize.SIZE_1K);
-  const [proRatio, setProRatio] = useState<AspectRatio>(AspectRatio.SQUARE);
-
   // Shared Result State
   const [isLoading, setIsLoading] = useState(false);
   const [generatedImage, setGeneratedImage] = useState<string | null>(null);
@@ -64,31 +58,6 @@ const App: React.FC = () => {
     }
   };
 
-  const handleProGenerate = async () => {
-    if (!proPrompt.trim()) {
-      setError("Please enter a description for the image.");
-      return;
-    }
-    setIsLoading(true);
-    clearResults();
-
-    try {
-      // Check for key first
-      try {
-        await ensurePaidApiKey();
-      } catch (keyErr) {
-        throw new Error("Billing account selection failed or was cancelled.");
-      }
-
-      const resultImage = await generateProImage(proPrompt, proSize, proRatio);
-      setGeneratedImage(resultImage);
-    } catch (err: any) {
-      setError(err.message);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   const handleVideoGenerate = async () => {
     if (!generatedImage) return;
     
@@ -118,166 +87,91 @@ const App: React.FC = () => {
   };
 
   // --- Render ---
+  // Palette: #2B3D4F (Bg), #3398DB (Blue), #E74D3C (Red), #F39C12 (Yellow), #EDF1F2 (Text)
 
   return (
-    <div className="min-h-screen bg-[#0f172a] text-gray-200 font-sans selection:bg-blue-500/30">
+    <div className="min-h-screen bg-[#2B3D4F] text-[#EDF1F2] font-sans selection:bg-[#3398DB]/30">
       {/* Header */}
-      <header className="bg-[#1e293b]/80 backdrop-blur-md border-b border-gray-700 sticky top-0 z-50">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+      <header className="bg-[#2B3D4F]/90 backdrop-blur-xl border-b border-white/5 sticky top-0 z-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
           <div className="flex items-center space-x-3">
-            <div className="h-8 w-8 bg-gradient-to-tr from-blue-500 to-purple-500 rounded-lg flex items-center justify-center shadow-lg shadow-blue-500/20">
-              <svg className="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <div className="h-10 w-10 bg-gradient-to-br from-[#3398DB] to-[#2B3D4F] rounded-2xl flex items-center justify-center shadow-lg border border-white/10 rotate-3 hover:rotate-6 transition-transform duration-300">
+              <svg className="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
               </svg>
             </div>
-            <h1 className="text-xl font-bold text-white tracking-tight">MockupStudio<span className="text-blue-400">AI</span></h1>
-          </div>
-          
-          {/* Mode Switcher */}
-          <div className="flex bg-gray-800 p-1 rounded-lg">
-            <button
-              onClick={() => { setMode(AppMode.LOGO_MOCKUP); clearResults(); }}
-              className={`px-4 py-1.5 rounded-md text-sm font-medium transition-all ${mode === AppMode.LOGO_MOCKUP ? 'bg-gray-700 text-white shadow-sm' : 'text-gray-400 hover:text-gray-300'}`}
-            >
-              Quick Mockup
-            </button>
-            <button
-              onClick={() => { setMode(AppMode.PRO_GENERATION); clearResults(); }}
-              className={`px-4 py-1.5 rounded-md text-sm font-medium transition-all ${mode === AppMode.PRO_GENERATION ? 'bg-gradient-to-r from-amber-600 to-orange-600 text-white shadow-sm' : 'text-gray-400 hover:text-gray-300'}`}
-            >
-              Pro Studio ⚡
-            </button>
+            <h1 className="text-2xl font-bold text-white tracking-tight">Mockup<span className="text-[#3398DB]">Studio</span></h1>
           </div>
         </div>
       </header>
 
-      <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
         <div className="flex flex-col lg:flex-row gap-8">
           
           {/* LEFT PANEL: Controls */}
-          <div className="w-full lg:w-1/3 space-y-6">
+          <div className="w-full lg:w-5/12 space-y-8">
             
             {/* Panel Title */}
-            <div>
-               <h2 className="text-2xl font-bold text-white mb-1">
-                 {mode === AppMode.LOGO_MOCKUP ? 'Product Mockup' : 'Pro Generation'}
+            <div className="mb-6">
+               <h2 className="text-4xl font-bold text-white mb-2 tracking-tight">
+                 Visualize
                </h2>
-               <p className="text-sm text-gray-400">
-                 {mode === AppMode.LOGO_MOCKUP 
-                   ? 'Place your logo on realistic products instantly.' 
-                   : 'Generate high-fidelity marketing assets in 4K.'}
+               <p className="text-base text-[#EDF1F2]/70 leading-relaxed">
+                 Upload a logo and instantly visualize it on premium merchandise.
                </p>
             </div>
 
-            {/* --- MOCKUP MODE CONTROLS --- */}
-            {mode === AppMode.LOGO_MOCKUP && (
-              <div className="space-y-6 animate-fadeIn">
-                <section>
-                  <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">1. Upload Logo</label>
-                  <LogoUploader onLogoSelected={handleLogoSelected} currentLogo={logo} />
-                </section>
-
-                <section>
-                  <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">2. Select Product</label>
-                  <ProductSelector selectedProduct={selectedProduct} onSelect={setSelectedProduct} />
-                </section>
-
-                <section>
-                  <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">3. Customize (Optional)</label>
-                  <textarea
-                    value={mockupPrompt}
-                    onChange={(e) => setMockupPrompt(e.target.value)}
-                    placeholder='E.g., "On a rustic wooden table", "Add a retro filter", "Soft morning lighting"'
-                    className="w-full bg-gray-800 border border-gray-700 rounded-lg p-3 text-sm text-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none resize-none h-24"
-                  />
-                </section>
-
-                <Button 
-                  onClick={handleMockupGenerate} 
-                  fullWidth 
-                  disabled={!logo || isLoading}
-                  isLoading={isLoading}
-                >
-                  Generate Mockup
-                </Button>
-                <p className="text-xs text-center text-gray-500">Powered by Gemini 2.5 Flash Image</p>
-              </div>
-            )}
-
-            {/* --- PRO MODE CONTROLS --- */}
-            {mode === AppMode.PRO_GENERATION && (
-              <div className="space-y-6 animate-fadeIn">
-                 <section>
-                  <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Prompt</label>
-                  <textarea
-                    value={proPrompt}
-                    onChange={(e) => setProPrompt(e.target.value)}
-                    placeholder='Describe your image in detail. E.g., "A futuristic glass water bottle on a neon-lit rainy street, cyberpunk style, 8k resolution"'
-                    className="w-full bg-gray-800 border border-gray-700 rounded-lg p-3 text-sm text-gray-200 focus:ring-2 focus:ring-orange-500 focus:border-transparent outline-none resize-none h-32"
-                  />
-                </section>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <section>
-                    <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Size</label>
-                    <select 
-                      value={proSize}
-                      onChange={(e) => setProSize(e.target.value as ImageSize)}
-                      className="w-full bg-gray-800 border border-gray-700 rounded-lg p-2.5 text-sm text-white focus:ring-2 focus:ring-orange-500 outline-none"
-                    >
-                      <option value={ImageSize.SIZE_1K}>1K (Standard)</option>
-                      <option value={ImageSize.SIZE_2K}>2K (HD)</option>
-                      <option value={ImageSize.SIZE_4K}>4K (Ultra HD)</option>
-                    </select>
-                  </section>
-                  <section>
-                    <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Aspect Ratio</label>
-                    <select 
-                      value={proRatio}
-                      onChange={(e) => setProRatio(e.target.value as AspectRatio)}
-                      className="w-full bg-gray-800 border border-gray-700 rounded-lg p-2.5 text-sm text-white focus:ring-2 focus:ring-orange-500 outline-none"
-                    >
-                      <option value={AspectRatio.SQUARE}>Square (1:1)</option>
-                      <option value={AspectRatio.PORTRAIT}>Portrait (9:16)</option>
-                      <option value={AspectRatio.LANDSCAPE}>Landscape (16:9)</option>
-                      <option value={AspectRatio.STANDARD}>Standard (4:3)</option>
-                    </select>
-                  </section>
+            {/* --- MOCKUP CONTROLS --- */}
+            <div className="space-y-8 animate-fadeIn">
+              <section>
+                <div className="flex items-center mb-3">
+                  <span className="flex items-center justify-center w-6 h-6 rounded-full bg-[#F39C12] text-[#2B3D4F] text-xs font-bold mr-2">1</span>
+                  <label className="text-sm font-semibold text-[#EDF1F2]/90 uppercase tracking-wide">Upload Logo</label>
                 </div>
+                <LogoUploader onLogoSelected={handleLogoSelected} currentLogo={logo} />
+              </section>
 
-                <div className="bg-orange-900/20 border border-orange-800/50 p-4 rounded-lg">
-                   <div className="flex items-start space-x-3">
-                      <span className="text-orange-500 mt-0.5">⚠️</span>
-                      <p className="text-xs text-orange-200 leading-relaxed">
-                        Using Gemini 3 Pro requires a billed Google Cloud Project. You will be asked to select your project key when you click Generate.
-                        <br/>
-                        <a href="https://ai.google.dev/gemini-api/docs/billing" target="_blank" rel="noreferrer" className="underline hover:text-white mt-1 inline-block">Read Billing Docs</a>
-                      </p>
-                   </div>
+              <section>
+                <div className="flex items-center mb-3">
+                  <span className="flex items-center justify-center w-6 h-6 rounded-full bg-[#F39C12] text-[#2B3D4F] text-xs font-bold mr-2">2</span>
+                  <label className="text-sm font-semibold text-[#EDF1F2]/90 uppercase tracking-wide">Select Product</label>
                 </div>
+                <ProductSelector selectedProduct={selectedProduct} onSelect={setSelectedProduct} />
+              </section>
 
-                <Button 
-                  onClick={handleProGenerate} 
-                  fullWidth 
-                  disabled={!proPrompt || isLoading}
-                  isLoading={isLoading}
-                  variant="primary"
-                  className="bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 border-none shadow-orange-900/20"
-                >
-                  Generate High-Res Image
-                </Button>
-              </div>
-            )}
+              <section>
+                <div className="flex items-center mb-3">
+                  <span className="flex items-center justify-center w-6 h-6 rounded-full bg-[#F39C12] text-[#2B3D4F] text-xs font-bold mr-2">3</span>
+                  <label className="text-sm font-semibold text-[#EDF1F2]/90 uppercase tracking-wide">Customize (Optional)</label>
+                </div>
+                <textarea
+                  value={mockupPrompt}
+                  onChange={(e) => setMockupPrompt(e.target.value)}
+                  placeholder='E.g., "On a rustic wooden table", "Add a retro filter", "Soft morning lighting"'
+                  className="w-full bg-black/20 border border-[#EDF1F2]/10 rounded-2xl p-4 text-sm text-[#EDF1F2] focus:ring-2 focus:ring-[#3398DB] focus:border-transparent outline-none resize-none h-32 transition-all focus:bg-black/30 placeholder-gray-500"
+                />
+              </section>
 
+              <Button 
+                onClick={handleMockupGenerate} 
+                fullWidth 
+                size="lg"
+                disabled={!logo || isLoading}
+                isLoading={isLoading}
+                className="shadow-lg shadow-black/20"
+              >
+                Generate Mockup
+              </Button>
+            </div>
           </div>
 
           {/* RIGHT PANEL: Results */}
-          <div className="w-full lg:w-2/3">
-             <div className="bg-[#162032] border border-gray-700/50 rounded-2xl min-h-[600px] flex flex-col relative overflow-hidden shadow-2xl transition-all duration-500">
+          <div className="w-full lg:w-7/12">
+             <div className="bg-black/20 rounded-[32px] min-h-[680px] flex flex-col relative overflow-hidden shadow-2xl border border-white/5 transition-all duration-500">
                 {/* Result Header */}
-                <div className="absolute top-4 right-4 z-10 flex space-x-2">
+                <div className="absolute top-6 right-6 z-10 flex space-x-2">
                    {generatedImage && !isLoading && (
-                     <Button variant="secondary" size="sm" onClick={handleDownload} className="!py-2 !px-3 text-xs bg-black/50 backdrop-blur-sm hover:bg-black/70 border-gray-600">
+                     <Button variant="secondary" size="sm" onClick={handleDownload} className="!py-2.5 !px-5 bg-black/50 backdrop-blur-md hover:bg-black/70 border border-white/10 text-white">
                         Download PNG
                      </Button>
                    )}
@@ -288,31 +182,31 @@ const App: React.FC = () => {
                    
                    {/* Empty State */}
                    {!generatedImage && !isLoading && !error && (
-                     <div className="text-center text-gray-500 my-auto">
-                        <div className="w-24 h-24 rounded-full bg-gray-800/50 mx-auto mb-4 flex items-center justify-center">
-                           <span className="text-4xl grayscale opacity-30">🖼️</span>
+                     <div className="text-center text-[#EDF1F2]/40 my-auto">
+                        <div className="w-32 h-32 rounded-[32px] bg-white/5 mx-auto mb-6 flex items-center justify-center border border-white/5">
+                           <svg className="w-12 h-12 opacity-50" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
                         </div>
-                        <p className="text-lg font-medium">Ready to Create</p>
-                        <p className="text-sm mt-1">Configure your settings on the left and hit Generate.</p>
+                        <p className="text-xl font-medium text-[#EDF1F2]">Ready to Create</p>
+                        <p className="text-sm mt-2 text-[#EDF1F2]/50">Configure your settings on the left to begin.</p>
                      </div>
                    )}
 
                    {/* Loading State (Image) */}
                    {isLoading && (
-                     <div className="flex flex-col items-center text-blue-400 my-auto">
-                        <div className="w-16 h-16 border-4 border-blue-500/30 border-t-blue-500 rounded-full animate-spin mb-4"></div>
-                        <p className="animate-pulse font-medium">Creating your masterpiece...</p>
-                        {mode === AppMode.PRO_GENERATION && <p className="text-xs text-gray-500 mt-2">This may take up to 30 seconds</p>}
+                     <div className="flex flex-col items-center text-[#3398DB] my-auto">
+                        <div className="w-20 h-20 border-4 border-[#3398DB]/20 border-t-[#3398DB] rounded-full animate-spin mb-6"></div>
+                        <p className="animate-pulse font-medium text-lg">Creating your masterpiece...</p>
                      </div>
                    )}
 
                    {/* Error State */}
                    {error && (
-                     <div className="max-w-md p-6 bg-red-900/20 border border-red-800 rounded-xl text-center my-auto">
-                        <p className="text-red-400 font-medium mb-2">Generation Failed</p>
-                        <p className="text-sm text-red-200 opacity-80">{error}</p>
+                     <div className="max-w-md p-8 bg-[#E74D3C]/10 border border-[#E74D3C]/20 rounded-3xl text-center my-auto">
+                        <div className="w-12 h-12 bg-[#E74D3C]/20 rounded-full flex items-center justify-center mx-auto mb-4 text-[#E74D3C]">!</div>
+                        <p className="text-[#E74D3C] font-medium mb-2 text-lg">Generation Failed</p>
+                        <p className="text-sm text-[#E74D3C]/80 mb-6">{error}</p>
                         {error.includes("API Key") && (
-                          <Button onClick={() => window.location.reload()} variant="secondary" className="mt-4 text-xs">
+                          <Button onClick={() => window.location.reload()} variant="secondary" size="sm">
                              Refresh to Reset Key
                           </Button>
                         )}
@@ -322,36 +216,38 @@ const App: React.FC = () => {
                    {/* Success State (Image) */}
                    {generatedImage && !isLoading && (
                      <div className="w-full flex flex-col items-center animate-fadeIn">
-                        <img 
-                          src={generatedImage} 
-                          alt="Generated Result" 
-                          className="max-h-[500px] w-auto object-contain rounded-lg shadow-2xl mb-8"
-                        />
+                        <div className="relative rounded-2xl overflow-hidden shadow-2xl bg-black/40 mb-8 border border-white/5">
+                          <img 
+                            src={generatedImage} 
+                            alt="Generated Result" 
+                            className="max-h-[550px] w-auto object-contain"
+                          />
+                        </div>
 
                         {/* --- VIDEO PROMO STUDIO SECTION --- */}
-                        <div className="w-full max-w-2xl bg-gray-800/40 border border-gray-700 rounded-xl p-6 animate-slideUp">
-                           <div className="flex items-center justify-between mb-4">
-                              <h3 className="text-lg font-semibold text-white flex items-center">
-                                <span className="mr-2">🎬</span> Promo Video Studio
+                        <div className="w-full max-w-3xl bg-white/5 rounded-3xl p-8 animate-slideUp border border-white/5 shadow-xl">
+                           <div className="flex items-center justify-between mb-6">
+                              <h3 className="text-xl font-bold text-white flex items-center">
+                                <span className="mr-3 p-2 bg-[#F39C12]/20 rounded-lg text-[#F39C12]">🎬</span> Promo Video Studio
                               </h3>
-                              <span className="text-xs bg-purple-900/50 text-purple-300 px-2 py-1 rounded border border-purple-700/50">Powered by Veo</span>
+                              <span className="text-xs font-medium bg-[#F39C12]/20 text-[#F39C12] px-3 py-1.5 rounded-full border border-[#F39C12]/30">Powered by Veo</span>
                            </div>
 
                            {!generatedVideo && !isVideoLoading && !videoError && (
-                              <div className="space-y-4">
-                                 <p className="text-sm text-gray-400">Bring this mockup to life with a short promotional video.</p>
-                                 <div className="flex gap-2">
+                              <div className="space-y-5">
+                                 <p className="text-sm text-[#EDF1F2]/70 leading-relaxed">Bring this mockup to life. Enter a prompt to generate a dynamic promotional video.</p>
+                                 <div className="flex gap-3 flex-col sm:flex-row">
                                     <input 
                                        type="text" 
                                        value={videoPrompt}
                                        onChange={(e) => setVideoPrompt(e.target.value)}
                                        placeholder="E.g. Cinematic pan, dramatic lighting shift, slow rotation..." 
-                                       className="flex-1 bg-gray-900 border border-gray-700 rounded-lg px-4 py-2 text-sm text-white focus:ring-2 focus:ring-purple-500 outline-none"
+                                       className="flex-1 bg-black/30 border border-white/10 rounded-2xl px-5 py-3 text-sm text-white focus:ring-2 focus:ring-[#F39C12] outline-none placeholder-gray-500"
                                     />
                                     <Button 
                                        onClick={handleVideoGenerate}
                                        variant="primary" 
-                                       className="whitespace-nowrap bg-purple-600 hover:bg-purple-500 text-white"
+                                       className="whitespace-nowrap bg-[#F39C12] hover:bg-[#d68910] text-[#2B3D4F] rounded-full"
                                     >
                                        Generate Video
                                     </Button>
@@ -360,32 +256,34 @@ const App: React.FC = () => {
                            )}
 
                            {isVideoLoading && (
-                              <div className="py-8 text-center">
-                                 <div className="w-8 h-8 border-2 border-purple-500/30 border-t-purple-500 rounded-full animate-spin mx-auto mb-3"></div>
-                                 <p className="text-sm text-purple-300 font-medium">Generating video with Veo...</p>
-                                 <p className="text-xs text-gray-500 mt-1">This typically takes about 30-60 seconds</p>
+                              <div className="py-10 text-center bg-black/20 rounded-2xl border border-white/10 border-dashed">
+                                 <div className="w-10 h-10 border-4 border-[#F39C12]/30 border-t-[#F39C12] rounded-full animate-spin mx-auto mb-4"></div>
+                                 <p className="text-base text-[#F39C12] font-medium">Generating video with Veo...</p>
+                                 <p className="text-sm text-[#EDF1F2]/50 mt-2">This typically takes about 30-60 seconds</p>
                               </div>
                            )}
 
                            {videoError && (
-                              <div className="bg-red-900/20 border border-red-800/50 rounded-lg p-4 text-center">
-                                 <p className="text-sm text-red-300 mb-2">Video Generation Failed</p>
-                                 <p className="text-xs text-red-200 opacity-70 mb-3">{videoError}</p>
+                              <div className="bg-[#E74D3C]/10 border border-[#E74D3C]/20 rounded-2xl p-6 text-center">
+                                 <p className="text-base text-[#E74D3C] mb-2 font-medium">Video Generation Failed</p>
+                                 <p className="text-sm text-[#E74D3C]/70 mb-4">{videoError}</p>
                                  <Button size="sm" variant="secondary" onClick={() => setVideoError(null)}>Try Again</Button>
                               </div>
                            )}
 
                            {generatedVideo && (
-                              <div className="space-y-3">
-                                 <video 
-                                    src={generatedVideo} 
-                                    controls 
-                                    autoPlay 
-                                    loop 
-                                    className="w-full rounded-lg shadow-lg bg-black aspect-video"
-                                 />
-                                 <div className="flex justify-between items-center">
-                                    <p className="text-xs text-gray-500">Generated with Veo 3.1 Fast Preview</p>
+                              <div className="space-y-4">
+                                 <div className="rounded-2xl overflow-hidden shadow-lg bg-black aspect-video ring-1 ring-white/10">
+                                   <video 
+                                      src={generatedVideo} 
+                                      controls 
+                                      autoPlay 
+                                      loop 
+                                      className="w-full h-full object-contain"
+                                   />
+                                 </div>
+                                 <div className="flex justify-between items-center px-1">
+                                    <p className="text-xs text-[#EDF1F2]/50">Generated with Veo 3.1 Fast Preview</p>
                                     <Button 
                                        size="sm" 
                                        variant="secondary" 
@@ -397,6 +295,7 @@ const App: React.FC = () => {
                                           link.click();
                                           document.body.removeChild(link);
                                        }}
+                                       className="rounded-full"
                                     >
                                        Download Video
                                     </Button>
