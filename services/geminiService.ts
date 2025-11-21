@@ -110,6 +110,67 @@ export const generateProImage = async (
   }
 };
 
+/**
+ * Generates a short promotional video from a static image using Veo (veo-3.1-fast-generate-preview).
+ * Requires a paid API key.
+ */
+export const generatePromoVideo = async (
+  imageBase64: string,
+  prompt: string
+): Promise<string> => {
+  // 1. Ensure paid key
+  await ensurePaidApiKey();
+
+  const apiKey = getEnvApiKey();
+  const ai = new GoogleGenAI({ apiKey });
+
+  try {
+    const cleanBase64 = imageBase64.replace(/^data:image\/(png|jpeg|jpg|webp);base64,/, "");
+
+    let operation = await ai.models.generateVideos({
+      model: 'veo-3.1-fast-generate-preview',
+      prompt: prompt || "Cinematic product showcase, smooth camera movement, 4k, highly detailed",
+      image: {
+        imageBytes: cleanBase64,
+        mimeType: 'image/png',
+      },
+      config: {
+        numberOfVideos: 1,
+        resolution: '720p', // Fast preview typically supports 720p
+        aspectRatio: '16:9',
+      }
+    });
+
+    // Polling loop
+    while (!operation.done) {
+      await new Promise(resolve => setTimeout(resolve, 5000)); // Poll every 5 seconds
+      operation = await ai.operations.getVideosOperation({operation: operation});
+    }
+
+    const videoUri = operation.response?.generatedVideos?.[0]?.video?.uri;
+    if (!videoUri) {
+       throw new Error("Video generation completed but no video URI returned.");
+    }
+
+    // Fetch the actual video bytes using the API key
+    const videoResponse = await fetch(`${videoUri}&key=${apiKey}`);
+    if (!videoResponse.ok) {
+      throw new Error(`Failed to fetch video content: ${videoResponse.statusText}`);
+    }
+
+    const blob = await videoResponse.blob();
+    return URL.createObjectURL(blob);
+
+  } catch (error: any) {
+    console.error("Video generation failed:", error);
+    const win = window as any;
+    if (error.message && error.message.includes("Requested entity was not found") && win.aistudio?.openSelectKey) {
+       throw new Error("API Key invalid or expired. Please re-select your key.");
+    }
+    throw new Error(error.message || "Failed to generate video");
+  }
+};
+
 // Helper to extract base64 image from the response structure
 const extractImageFromResponse = (response: GenerateContentResponse): string => {
   const candidates = response.candidates;

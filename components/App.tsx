@@ -1,6 +1,6 @@
 import React, { useState, useCallback } from 'react';
 import { AppMode, ProductType, ImageSize, AspectRatio } from '../types';
-import { generateMockup, generateProImage, ensurePaidApiKey } from '../services/geminiService';
+import { generateMockup, generateProImage, generatePromoVideo, ensurePaidApiKey } from '../services/geminiService';
 import { LogoUploader } from './LogoUploader';
 import { ProductSelector } from './ProductSelector';
 import { Button } from './Button';
@@ -24,11 +24,24 @@ const App: React.FC = () => {
   const [generatedImage, setGeneratedImage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
+  // Video State
+  const [videoPrompt, setVideoPrompt] = useState("");
+  const [generatedVideo, setGeneratedVideo] = useState<string | null>(null);
+  const [isVideoLoading, setIsVideoLoading] = useState(false);
+  const [videoError, setVideoError] = useState<string | null>(null);
+
   // --- Handlers ---
 
   const handleLogoSelected = useCallback((base64: string) => {
     setLogo(base64 || null);
   }, []);
+
+  const clearResults = () => {
+    setGeneratedImage(null);
+    setGeneratedVideo(null);
+    setError(null);
+    setVideoError(null);
+  };
 
   const handleMockupGenerate = async () => {
     if (!logo) {
@@ -36,8 +49,7 @@ const App: React.FC = () => {
       return;
     }
     setIsLoading(true);
-    setError(null);
-    setGeneratedImage(null);
+    clearResults();
 
     try {
       // Construct a robust prompt for the Flash model
@@ -58,8 +70,7 @@ const App: React.FC = () => {
       return;
     }
     setIsLoading(true);
-    setError(null);
-    setGeneratedImage(null);
+    clearResults();
 
     try {
       // Check for key first
@@ -75,6 +86,23 @@ const App: React.FC = () => {
       setError(err.message);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleVideoGenerate = async () => {
+    if (!generatedImage) return;
+    
+    setIsVideoLoading(true);
+    setVideoError(null);
+    setGeneratedVideo(null);
+
+    try {
+      const resultVideo = await generatePromoVideo(generatedImage, videoPrompt);
+      setGeneratedVideo(resultVideo);
+    } catch (err: any) {
+      setVideoError(err.message);
+    } finally {
+      setIsVideoLoading(false);
     }
   };
 
@@ -108,13 +136,13 @@ const App: React.FC = () => {
           {/* Mode Switcher */}
           <div className="flex bg-gray-800 p-1 rounded-lg">
             <button
-              onClick={() => { setMode(AppMode.LOGO_MOCKUP); setGeneratedImage(null); setError(null); }}
+              onClick={() => { setMode(AppMode.LOGO_MOCKUP); clearResults(); }}
               className={`px-4 py-1.5 rounded-md text-sm font-medium transition-all ${mode === AppMode.LOGO_MOCKUP ? 'bg-gray-700 text-white shadow-sm' : 'text-gray-400 hover:text-gray-300'}`}
             >
               Quick Mockup
             </button>
             <button
-              onClick={() => { setMode(AppMode.PRO_GENERATION); setGeneratedImage(null); setError(null); }}
+              onClick={() => { setMode(AppMode.PRO_GENERATION); clearResults(); }}
               className={`px-4 py-1.5 rounded-md text-sm font-medium transition-all ${mode === AppMode.PRO_GENERATION ? 'bg-gradient-to-r from-amber-600 to-orange-600 text-white shadow-sm' : 'text-gray-400 hover:text-gray-300'}`}
             >
               Pro Studio ⚡
@@ -245,10 +273,10 @@ const App: React.FC = () => {
 
           {/* RIGHT PANEL: Results */}
           <div className="w-full lg:w-2/3">
-             <div className="bg-[#162032] border border-gray-700/50 rounded-2xl h-[600px] flex flex-col relative overflow-hidden shadow-2xl">
+             <div className="bg-[#162032] border border-gray-700/50 rounded-2xl min-h-[600px] flex flex-col relative overflow-hidden shadow-2xl transition-all duration-500">
                 {/* Result Header */}
                 <div className="absolute top-4 right-4 z-10 flex space-x-2">
-                   {generatedImage && (
+                   {generatedImage && !isLoading && (
                      <Button variant="secondary" size="sm" onClick={handleDownload} className="!py-2 !px-3 text-xs bg-black/50 backdrop-blur-sm hover:bg-black/70 border-gray-600">
                         Download PNG
                      </Button>
@@ -256,11 +284,11 @@ const App: React.FC = () => {
                 </div>
 
                 {/* Main Display Area */}
-                <div className="flex-1 flex items-center justify-center p-8 relative">
+                <div className="flex-1 flex flex-col items-center justify-center p-8 relative">
                    
                    {/* Empty State */}
                    {!generatedImage && !isLoading && !error && (
-                     <div className="text-center text-gray-500">
+                     <div className="text-center text-gray-500 my-auto">
                         <div className="w-24 h-24 rounded-full bg-gray-800/50 mx-auto mb-4 flex items-center justify-center">
                            <span className="text-4xl grayscale opacity-30">🖼️</span>
                         </div>
@@ -269,9 +297,9 @@ const App: React.FC = () => {
                      </div>
                    )}
 
-                   {/* Loading State */}
+                   {/* Loading State (Image) */}
                    {isLoading && (
-                     <div className="flex flex-col items-center text-blue-400">
+                     <div className="flex flex-col items-center text-blue-400 my-auto">
                         <div className="w-16 h-16 border-4 border-blue-500/30 border-t-blue-500 rounded-full animate-spin mb-4"></div>
                         <p className="animate-pulse font-medium">Creating your masterpiece...</p>
                         {mode === AppMode.PRO_GENERATION && <p className="text-xs text-gray-500 mt-2">This may take up to 30 seconds</p>}
@@ -280,7 +308,7 @@ const App: React.FC = () => {
 
                    {/* Error State */}
                    {error && (
-                     <div className="max-w-md p-6 bg-red-900/20 border border-red-800 rounded-xl text-center">
+                     <div className="max-w-md p-6 bg-red-900/20 border border-red-800 rounded-xl text-center my-auto">
                         <p className="text-red-400 font-medium mb-2">Generation Failed</p>
                         <p className="text-sm text-red-200 opacity-80">{error}</p>
                         {error.includes("API Key") && (
@@ -291,13 +319,93 @@ const App: React.FC = () => {
                      </div>
                    )}
 
-                   {/* Success State */}
+                   {/* Success State (Image) */}
                    {generatedImage && !isLoading && (
-                     <img 
-                       src={generatedImage} 
-                       alt="Generated Result" 
-                       className="w-full h-full object-contain rounded-lg shadow-2xl animate-fadeIn"
-                     />
+                     <div className="w-full flex flex-col items-center animate-fadeIn">
+                        <img 
+                          src={generatedImage} 
+                          alt="Generated Result" 
+                          className="max-h-[500px] w-auto object-contain rounded-lg shadow-2xl mb-8"
+                        />
+
+                        {/* --- VIDEO PROMO STUDIO SECTION --- */}
+                        <div className="w-full max-w-2xl bg-gray-800/40 border border-gray-700 rounded-xl p-6 animate-slideUp">
+                           <div className="flex items-center justify-between mb-4">
+                              <h3 className="text-lg font-semibold text-white flex items-center">
+                                <span className="mr-2">🎬</span> Promo Video Studio
+                              </h3>
+                              <span className="text-xs bg-purple-900/50 text-purple-300 px-2 py-1 rounded border border-purple-700/50">Powered by Veo</span>
+                           </div>
+
+                           {!generatedVideo && !isVideoLoading && !videoError && (
+                              <div className="space-y-4">
+                                 <p className="text-sm text-gray-400">Bring this mockup to life with a short promotional video.</p>
+                                 <div className="flex gap-2">
+                                    <input 
+                                       type="text" 
+                                       value={videoPrompt}
+                                       onChange={(e) => setVideoPrompt(e.target.value)}
+                                       placeholder="E.g. Cinematic pan, dramatic lighting shift, slow rotation..." 
+                                       className="flex-1 bg-gray-900 border border-gray-700 rounded-lg px-4 py-2 text-sm text-white focus:ring-2 focus:ring-purple-500 outline-none"
+                                    />
+                                    <Button 
+                                       onClick={handleVideoGenerate}
+                                       variant="primary" 
+                                       className="whitespace-nowrap bg-purple-600 hover:bg-purple-500 text-white"
+                                    >
+                                       Generate Video
+                                    </Button>
+                                 </div>
+                              </div>
+                           )}
+
+                           {isVideoLoading && (
+                              <div className="py-8 text-center">
+                                 <div className="w-8 h-8 border-2 border-purple-500/30 border-t-purple-500 rounded-full animate-spin mx-auto mb-3"></div>
+                                 <p className="text-sm text-purple-300 font-medium">Generating video with Veo...</p>
+                                 <p className="text-xs text-gray-500 mt-1">This typically takes about 30-60 seconds</p>
+                              </div>
+                           )}
+
+                           {videoError && (
+                              <div className="bg-red-900/20 border border-red-800/50 rounded-lg p-4 text-center">
+                                 <p className="text-sm text-red-300 mb-2">Video Generation Failed</p>
+                                 <p className="text-xs text-red-200 opacity-70 mb-3">{videoError}</p>
+                                 <Button size="sm" variant="secondary" onClick={() => setVideoError(null)}>Try Again</Button>
+                              </div>
+                           )}
+
+                           {generatedVideo && (
+                              <div className="space-y-3">
+                                 <video 
+                                    src={generatedVideo} 
+                                    controls 
+                                    autoPlay 
+                                    loop 
+                                    className="w-full rounded-lg shadow-lg bg-black aspect-video"
+                                 />
+                                 <div className="flex justify-between items-center">
+                                    <p className="text-xs text-gray-500">Generated with Veo 3.1 Fast Preview</p>
+                                    <Button 
+                                       size="sm" 
+                                       variant="secondary" 
+                                       onClick={() => {
+                                          const link = document.createElement('a');
+                                          link.href = generatedVideo;
+                                          link.download = `promo-video-${Date.now()}.mp4`;
+                                          document.body.appendChild(link);
+                                          link.click();
+                                          document.body.removeChild(link);
+                                       }}
+                                    >
+                                       Download Video
+                                    </Button>
+                                 </div>
+                              </div>
+                           )}
+                        </div>
+
+                     </div>
                    )}
                 </div>
              </div>
