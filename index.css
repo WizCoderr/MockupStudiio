@@ -1,0 +1,32 @@
+/* Standard CSS */
+
+body {
+  background-color: #2B3D4F;
+  color: #EDF1F2;
+  font-family: 'Inter', sans-serif;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-track {
+  background: #202d3a; 
+}
+::-webkit-scrollbar-thumb {
+  background: #3398DB; /* Palette Blue */
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #2980b9; 
+}
+
+/* Checkerboard Pattern for Professional Canvas Areas */
+.bg-checkerboard {
+  background-color: #1a1a1a;
+  background-image:
+    linear-gradient(45deg, #222 25%, transparent 25%, transparent 75%, #222 75%, #222),
+    linear-gradient(45deg, #222 25%, transparent 25%, transparent 75%, #222 75%, #222);
+  background-size: 20px 20px;
+  background-position: 0 0, 10px 10px;
+}

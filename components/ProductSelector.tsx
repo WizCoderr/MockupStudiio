@@ -17,19 +17,26 @@ const products = [
 
 export const ProductSelector: React.FC<ProductSelectorProps> = ({ selectedProduct, onSelect }) => {
   return (
-    <div className="grid grid-cols-3 sm:grid-cols-6 gap-3">
+    <div className="grid grid-cols-3 gap-3">
       {products.map((p) => (
         <button
           key={p.id}
           onClick={() => onSelect(p.id)}
-          className={`flex flex-col items-center justify-center p-3 rounded-2xl border transition-all duration-300 aspect-square ${
+          className={`group relative flex flex-col items-center justify-center p-3 rounded-xl border transition-all duration-200 outline-none focus:ring-2 focus:ring-[#3398DB] focus:ring-offset-2 focus:ring-offset-[#2B3D4F] ${
             selectedProduct === p.id
-              ? 'bg-[#3398DB] border-[#3398DB] text-white shadow-lg' // Active State
-              : 'bg-black/20 border-transparent text-[#EDF1F2]/60 hover:bg-black/30 hover:text-[#EDF1F2]' // Inactive State
+              ? 'bg-[#3398DB]/10 border-[#3398DB] text-[#3398DB]' 
+              : 'bg-[#1F2B3A] border-transparent hover:border-white/10 text-[#EDF1F2]/60 hover:text-[#EDF1F2]'
           }`}
         >
-          <span className="text-2xl mb-2">{p.icon}</span>
-          <span className="text-xs font-semibold">{p.label}</span>
+          <span className={`text-2xl mb-2 transition-transform duration-200 ${selectedProduct === p.id ? 'scale-110' : 'group-hover:scale-110'}`}>
+            {p.icon}
+          </span>
+          <span className="text-xs font-medium">{p.label}</span>
+          
+          {/* Selected Indicator */}
+          {selectedProduct === p.id && (
+            <div className="absolute top-2 right-2 h-1.5 w-1.5 rounded-full bg-[#3398DB]"></div>
+          )}
         </button>
       ))}
     </div>
