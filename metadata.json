@@ -1,0 +1,5 @@
+{
+  "name": "MockupStudio AI",
+  "description": "Upload your logo and instantly see it on realistic product mockups using Gemini 2.5 Flash, or generate high-fidelity 4K assets with Gemini 3 Pro.",
+  "requestFramePermissions": []
+}
